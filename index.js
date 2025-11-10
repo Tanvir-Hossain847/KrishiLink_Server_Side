@@ -26,13 +26,15 @@ async function run() {
         await client.connect()
 
         const skeletonDB = client.db("skeletondb")
-        const collection = skeletonDB.collection("books")
+        const collection = skeletonDB.collection("products")
 
         // post operations
         app.post('/myproducts', async(req, res) => {
-            const newBooks = req.body;
-            const result = await collection.insertOne(newBooks)
+            const newProducts = req.body;
+            const result = await collection.insertOne(newProducts)
             res.send(result)
+            console.log("the result is", result);
+            
         })
 
         //delete operations
@@ -61,7 +63,7 @@ async function run() {
 
         //get operations
         app.get('/myproducts', async ( req, res ) => {
-            const cursor = collection.find().sort({price: 1})
+            const cursor = collection.find().sort({_id: 1})
             const result = await cursor.toArray()
             res.send(result)
         })
@@ -71,6 +73,13 @@ async function run() {
             const id = req.params.id
             const query = {_id: new ObjectId(id)}
             const result = await collection.findOne(query)
+            res.send(result)
+        })
+
+        //get my post
+        app.get('/myproducts', async (req, res) => {
+            const email = req.query.email
+            const result = await collection.find({"owner.ownerEmail": email})
             res.send(result)
         })
 
