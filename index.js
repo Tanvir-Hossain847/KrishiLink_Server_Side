@@ -71,15 +71,16 @@ async function run() {
         //get a single 
         app.get('/myproducts/:id', async (req,res) => {
             const id = req.params.id
-            const query = {_id: new ObjectId(id)}
+            const query = {_id: id}
             const result = await collection.findOne(query)
-            res.send(result)
+            res.json(result)
         })
 
         //get my post
-        app.get('/myproducts', async (req, res) => {
+        app.get('/myposts', async (req, res) => {
             const email = req.query.email
-            const result = await collection.find({"owner.ownerEmail": email})
+            const query = {"owner.ownerEmail": email}
+            const result = await collection.find(query).toArray()
             res.send(result)
         })
 
