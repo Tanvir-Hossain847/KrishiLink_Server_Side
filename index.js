@@ -115,6 +115,12 @@ async function run() {
             
         });
 
+        app.get('/interests', async (req, res) => {
+            const cursor = collection.find({interests: {$exists: true, $ne: []}})
+            const result = await cursor.toArray()
+            res.send(result)
+        })
+
         await client.db("admin").command({ ping: 1 });
          console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } 
