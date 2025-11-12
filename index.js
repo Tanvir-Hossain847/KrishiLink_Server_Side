@@ -38,28 +38,28 @@ async function run() {
         })
 
         //delete operations
-        app.delete('/myproducts/:id', async(req, res) => {
-            const id = req.params.id
-            const query = {_id: new ObjectId(id)}
-            const result = await collection.deleteOne(query)
-            res.send(result)
-        })
+        // app.delete('/myproducts/:id', async(req, res) => {
+        //     const id = req.params.id
+        //     const query = {_id: new ObjectId(id)}
+        //     const result = await collection.deleteOne(query)
+        //     res.send(result)
+        // })
 
-        // update operations
-        app.patch('/myproducts/:id', async (req, res) =>{
-            const id = req.params.id
-            const query = {_id: new ObjectId(id)}
-            const updateNEW = req.body
-            const update = {
-                $set: {
-                    title: updateNEW.title,
-                    price: updateNEW.price
-                }
-            }
-
-            const result = await collection.updateOne(query, update)
-            res.send(result)
-        })
+        // // update operations
+        // app.patch('/myproducts/:id', async (req, res) =>{
+        //     const id = req.params.id
+        //     const query = {_id: new ObjectId(id)}
+        //     const updateNEW = req.body
+        //     const update = {
+        //         $set: {
+        //             title: updateNEW.title,
+        //             price: updateNEW.price
+        //         }
+        //     }
+// 
+        //     const result = await collection.updateOne(query, update)
+        //     res.send(result)
+        // })
 
         //get operations
         app.get('/myproducts', async ( req, res ) => {
@@ -71,7 +71,7 @@ async function run() {
         //get a single 
         app.get('/myproducts/:id', async (req,res) => {
             const id = req.params.id
-            const query = {_id: id}
+            const query = {_id: new ObjectId(id)}
             const result = await collection.findOne(query)
             res.json(result)
         })
@@ -83,6 +83,37 @@ async function run() {
             const result = await collection.find(query).toArray()
             res.send(result)
         })
+
+        //post my interest
+        app.post('/interests', async (req, res) => {
+            try{
+                const {cropId,userEmail,userName,quantity,message} = req.body;
+                const query = {_id: new ObjectId(cropId)}
+                const interestId = new ObjectId()
+                const newInterest = {
+                    _id: interestId,
+                    cropId,
+                    userEmail,
+                    userName,
+                    quantity,
+                    message,
+                    status : "pending"
+                };
+                const updateresult = await collection.updateOne(
+                    query,
+                    {$push: {interests: newInterest}}
+                )    
+    
+                if(updateresult.modifiedCount === 0){
+                    return res.status(500).send({error: "Failed To Update Interest"})
+                }
+                res.status(201).send({message: "Interest Updated Succesfully", interest: newInterest})
+            } catch(error){
+                console.log(error);
+                res.status(500).send({error: "Internal Server Error"})
+            }
+            
+        });
 
         await client.db("admin").command({ ping: 1 });
          console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -100,6 +131,3 @@ app.listen(port, () =>{
 
 
  
-
-// oDiHqEmt7A1Z8f0a
-// skeletonDB
