@@ -130,6 +130,17 @@ async function run() {
             res.send(result)
         })
 
+        app.delete('/interests', async (req, res) => {
+            console.log(req.body);
+            
+            const { interestId } = req.body
+            const result = await collection.updateOne(
+                { "interests._id": new ObjectId(interestId)},
+                {$pull:{interests : {_id: new ObjectId(interestId)}}}
+            )
+            res.status(200).send({message: "Deleted Interest Successfully"})
+        })
+
         await client.db("admin").command({ ping: 1 });
          console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } 
