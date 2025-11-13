@@ -76,7 +76,7 @@ async function run() {
             res.json(result)
         })
 
-        //get my post
+        //get my post via email
         app.get('/myposts', async (req, res) => {
             const email = req.query.email
             const query = {"owner.ownerEmail": email}
@@ -89,6 +89,7 @@ async function run() {
             try{
                 const {cropId,userEmail,userName,quantity,message} = req.body;
                 const query = {_id: new ObjectId(cropId)}
+                const crop = await collection.findOne(query)
                 const interestId = new ObjectId()
                 const newInterest = {
                     _id: interestId,
@@ -99,6 +100,12 @@ async function run() {
                     message,
                     status : "pending"
                 };
+
+                const alreadyInterested = crop.interests?.some((i) => i.userEmail === userEmail)
+                if(alreadyInterested){
+                    return res.status(409).json({error: "You Already Send Interest In This Crop"})
+                }
+
                 const updateresult = await collection.updateOne(
                     query,
                     {$push: {interests: newInterest}}
@@ -115,8 +122,10 @@ async function run() {
             
         });
 
+        //get my interest via email
         app.get('/interests', async (req, res) => {
-            const cursor = collection.find({interests: {$exists: true, $ne: []}})
+            const email = req.query.email
+            const cursor = collection.find({interests: {$elemMatch: {userEmail: email}}})
             const result = await cursor.toArray()
             res.send(result)
         })
