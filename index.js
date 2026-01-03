@@ -28,6 +28,7 @@ async function run() {
 
         const skeletonDB = client.db("skeletondb")
         const collection = skeletonDB.collection("products")
+        const cart = skeletonDB.collection("cart")
 
         // post operations
         app.post('/myproducts', async(req, res) => {
@@ -85,61 +86,28 @@ async function run() {
             res.send(result)
         })
 
-        //post my interest
-        app.post('/interests', async (req, res) => {
-            try{
-                const {cropId,userEmail,userName,quantity,message} = req.body;
-                const query = {_id: new ObjectId(cropId)}
-                const crop = await collection.findOne(query)
-                const interestId = new ObjectId()
-                const newInterest = {
-                    _id: interestId,
-                    cropId,
-                    userEmail,
-                    userName,
-                    quantity,
-                    message,
-                    status : "pending"
-                };
-
-                const alreadyInterested = crop.interests?.some((i) => i.userEmail === userEmail)
-                if(alreadyInterested){
-                    return res.status(409).json({error: "You Already Send Interest In This Crop"})
-                }
-
-                const updateresult = await collection.updateOne(
-                    query,
-                    {$push: {interests: newInterest}}
-                )    
-    
-                if(updateresult.modifiedCount === 0){
-                    return res.status(500).send({error: "Failed To Update Interest"})
-                }
-                res.status(201).send({message: "Interest Updated Succesfully", interest: newInterest})
-            } catch(error){
-                console.log(error);
-                res.status(500).send({error: "Internal Server Error"})
-            }
+        // cart related routes
+        app.post('/myitems', async(req, res) => {
+            const myItems = req.body
+            const result = await cart.insertOne(myItems)
+            res.send(result)
+            console.log('result is', result);
             
-        });
+        })
 
-        //get my interest via email
-        app.get('/interests', async (req, res) => {
-            const email = req.query.email
-            const cursor = collection.find({interests: {$elemMatch: {userEmail: email}}})
+        // get oparations
+        app.get('/myItems', async ( req, res ) => {
+            const cursor = cart.find().sort({_id: 1})
             const result = await cursor.toArray()
             res.send(result)
         })
 
-        app.delete('/interests', async (req, res) => {
-            console.log(req.body);
-            
-            const { interestId } = req.body
-            const result = await collection.updateOne(
-                { "interests._id": new ObjectId(interestId)},
-                {$pull:{interests : {_id: new ObjectId(interestId)}}}
-            )
-            res.status(200).send({message: "Deleted Interest Successfully"})
+        // delete operations
+        app.delete('/myItems/:id', async(req, res) => {
+            const id = req.params.id
+            const query = {_id: new ObjectId(id)}
+            const result = await cart.deleteOne(query)
+            res.send(result)
         })
 
         // await client.db("admin").command({ ping: 1 });
